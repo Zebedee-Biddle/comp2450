@@ -34,67 +34,28 @@ const Monster* linearSearch(const std::vector<Monster>& bestiary,
     (void)name;
 }
 
-const Monster* binarySearch(const std::vector<Monster>& bestiary,
-                            const std::string&         name) {
-    // TODO Floor 1 (Wed): iterative binary search.
-    //   PRECONDITION: bestiary is sorted ascending by name.
-    //
-    // Think before you type:
-    //   - Decide your invariant FIRST, then write code: does `high` mean
-    //     "the last valid index" (closed range, [low, high]) or "one past
-    //     the last valid index" (half-open, [low, high))? Pick one. Every
-    //     off-by-one bug starts with mixing the two.
-    //   - `std::size_t` is UNSIGNED. If your search range shrinks to empty
-    //     and you compute `high - 1`, does that value wrap around to a
-    //     huge number? Try in your head: what happens on `search Aardvark`
-    //     when Aardvark comes before every monster? Does your loop end?
-    //   - A name comparison has THREE outcomes: equal, less, greater. Each
-    //     goes in a different direction. If you collapse two branches into
-    //     one (e.g., an `if/else` instead of three cases), you've probably
-    //     broken binary search. Write all three explicitly.
-    //   - Middle index: `(low + high) / 2` is textbook but can overflow for
-    //     huge N. `low + (high - low) / 2` is the safe version. Write the
-    //     safe one — it's free, and it's a habit worth building.
-    (void)bestiary;
-    (void)name;
-    return nullptr;
+const Monster* binSearch(const std::vector<Monster>& bestiary, const std::string& name, size_t l, size_t h) {
+    size_t mid = l + ((h - l) >> 1);
+    std::string here = bestiary[mid].name;
+	while (here != name) {if (l >= h) return nullptr; // Window is empty, you are done/protect against inverted range.
+	size_t mid = l + ((h - l) >> 1); // This one I modified from the nonrecursive one.
+	here = bestiary[mid].name;
+    if (here < name) l = ++mid;
+    else h = mid;
+    } return &bestiary[mid];
 }
 
-const Monster* binarySearchRecursive(const std::vector<Monster>& bestiary,
-                                     const std::string&         name) {
-    // TODO Floor 1 (Fri): same contract as binarySearch, but recursive.
-    //   Recommended pattern: write a `static` helper in this file with extra
-    //   (low, high) parameters, and have this public function call it with
-    //   the initial range. Same precondition: bestiary must be sorted.
-    //
-    // Think before you type:
-    //   - Every recursion needs a BASE CASE and a RECURSIVE CASE. What is
-    //     the smallest range where you already know the answer without
-    //     looking further? That is your base case.
-    //   - Convince yourself, for each recursive call, that the new range
-    //     is a STRICT SUBSET of the old one. If it isn't, you will recurse
-    //     until the stack blows up. (Try it at N=100,000 if curious.)
-    //   - Why `static` for the helper? It has nothing to do with OOP here.
-    //     Look up "internal linkage" — it keeps the helper private to this
-    //     .cpp, so two files can have `helper(...)` without a link error.
-    //   - After it works: run `benchmark`. Does the recursive version cost
-    //     more per call than the iterative one? A little? A lot? Why might
-    //     that be? Write the answer in lab-notes.md.
-    (void)bestiary;
-    (void)name;
-    return nullptr;
+const Monster* binSearchRecurs(const std::vector<Monster>& bestiary, const std::string& name, size_t l, size_t h) {
+	if (l >= h) return nullptr; // Window is empty, you are done/protect against inverted range.
+	size_t mid = l + ((h - l) >> 1); // This one I made in class.
+	const std::string& here = bestiary[mid].name;
+	if (here == name) return &bestiary[mid];
+	else if (here < name) return binSearchRecurs(bestiary, name, ++mid, h);
+	else return binSearchRecurs(bestiary, name, l, mid);
 }
 
 const Monster* findMonster(const std::vector<Monster>& bestiary,
                            const std::string&         name) {
-    // TODO Floor 1: pick ONE of the three searches above and delegate.
-    //
-    // Think before you type:
-    //   - At the real bestiary's size (15 monsters), does it matter which
-    //     you pick? Run benchmark at N=10 and look at the microseconds.
-    //   - At N=100,000, does it matter? By how much?
-    //   - This is a JUDGMENT, not a fact. Whatever you pick, write WHY in
-    //     your commit message. That reasoning is the graded artifact.
     return linearSearch(bestiary, name);
 }
 
