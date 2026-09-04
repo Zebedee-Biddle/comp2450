@@ -55,6 +55,21 @@ void mergeSort(std::vector<Item>& inventory, const Comparator& cmp) {
 
 // ---- 2. Quicksort -------------------------------------------------------
 
+std::size_t partition(std::vector<Item>& v, std::size_t lo, std::size_t hi, const Comparator cmp) {
+   std::size_t mid = lo + (hi - lo) >> 1;
+   std::swap(mid, hi);
+   const Item pivot = v[hi];
+
+   std::size_t store = lo;
+   for (std::size_t i = 0; i < hi; ++i) if (cmp(v[i], pivot)) {
+      std::swap(v[store], v[i]);
+      ++store;
+   }
+
+   std::swap(v[store], v[hi]);
+   return store;
+}
+
 void quicksort(std::vector<Item>& inventory, const Comparator& cmp) {
     // TODO Floor 2 (Wed): implement quicksort.
     //
