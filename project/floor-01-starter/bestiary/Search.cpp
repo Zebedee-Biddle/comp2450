@@ -34,24 +34,26 @@ const Monster* linearSearch(const std::vector<Monster>& bestiary,
     (void)name;
 }
 
-const Monster* binSearch(const std::vector<Monster>& bestiary, const std::string& name, size_t l, size_t h) {
-    size_t mid = l + ((h - l) >> 1);
-    std::string here = bestiary[mid].name;
-	while (here != name) {if (l >= h) return nullptr; // Window is empty, you are done/protect against inverted range.
-	size_t mid = l + ((h - l) >> 1); // This one I modified from the nonrecursive one.
-	here = bestiary[mid].name;
-    if (here < name) l = ++mid;
-    else h = mid;
-    } return &bestiary[mid];
+const Monster* binSearch(const std::vector<Monster>& bestiary, const std::string& name) {
+   size_t lo = 0, hi = bestiary.size() - 1;
+   if (name < bestiary[0].name || name > bestiary[hi].name) return nullptr;
+   size_t mid = hi >> 1;
+   while (hi != lo) {
+      if (name == bestiary[mid].name) return &bestiary[mid];
+      else if (name > bestiary[mid].name) lo = mid;
+      else hi = mid;
+      mid = lo + (hi - lo) >> 1;
+   } if (name == bestiary[lo].name) return &bestiary[mid];
+     else return nullptr;
 }
 
-const Monster* binSearchRecurs(const std::vector<Monster>& bestiary, const std::string& name, size_t l, size_t h) {
-	if (l >= h) return nullptr; // Window is empty, you are done/protect against inverted range.
-	size_t mid = l + ((h - l) >> 1); // This one I made in class.
-	const std::string& here = bestiary[mid].name;
-	if (here == name) return &bestiary[mid];
-	else if (here < name) return binSearchRecurs(bestiary, name, ++mid, h);
-	else return binSearchRecurs(bestiary, name, l, mid);
+const Monster* binSearchRecurs(const std::vector<Monster>& bestiary, const std::string& name, size_t lo = 0, size_t hi) {
+   size_t mid = lo + (hi - lo) >> 1;
+   if (lo == hi) {
+      if (name == bestiary[mid].name) return &bestiary[mid];
+      else return nullptr;
+   } else if (name > bestiary[mid].name) return binSearchRecurs(bestiary, name, mid, hi);
+   else return binSearchRecurs(bestiary, name, lo, mid);
 }
 
 const Monster* findMonster(const std::vector<Monster>& bestiary,
