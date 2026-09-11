@@ -106,6 +106,7 @@ int main() {
         std::cout << "> ";
         if (!std::getline(std::cin, line)) break;
         if (line.empty()) continue;
+        try {
 
         std::string cmd, rest;
         splitFirst(line, cmd, rest);
@@ -172,7 +173,7 @@ int main() {
             // to `hero.inventory.at(n - 1)`. With the try/catch above,
             // the bad input becomes a clean error message instead of
             // a crash.
-            const Item& it = hero.inventory[n - 1];
+            const Item& it = hero.inventory.at(n - 1);
             std::cout << "  " << it.name
                       << "  (wt " << it.weight
                       << ", val " << it.value << ")\n";
@@ -232,7 +233,10 @@ int main() {
         else {
             std::cout << "The Vault does not understand '" << cmd << "'.\n";
         }
-    }
+    } catch(const std::exception& e) {
+   std::cout << "No such item exists: " << e.what() << '\n';
+  }
+}
 
     return 0;
 }

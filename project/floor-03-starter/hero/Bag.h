@@ -69,14 +69,8 @@ public:
     // game keeps going.
 
     const T& at(std::size_t i) const {
-        // TODO Floor 3 (Fri): bounds-check. If i >= size(), THROW a
-        // BagException constructed with (i, size()). Otherwise return
-        // the element at i — the unchecked [] is fine HERE because you
-        // already checked.
-        //
-        // The one word `throw` IS the exceptions lesson.
-        (void)i;
-        throw std::logic_error("TODO: Bag::at() not yet implemented (Floor 3 Fri)");
+       if (i >= size()) throw BagException(i, size());
+       else return data_[i];
     }
 
     T& at(std::size_t i) {

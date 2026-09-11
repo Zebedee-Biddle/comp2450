@@ -46,8 +46,7 @@ public:
     // noexcept to match the base class contract — a what() that throws
     // inside a catch block is a particularly cursed kind of bug.
     const char* what() const noexcept override {
-        // TODO Floor 3 (Fri): return msg_.c_str(). One line.
-        //
+        return msg_.c_str();
         // c_str() hands out a pointer into msg_'s internal storage. The
         // pointer stays valid as long as the BagException (and thus its
         // msg_ member) lives — typically until the catch block ends.
