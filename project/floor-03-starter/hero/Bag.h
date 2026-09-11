@@ -81,7 +81,7 @@ public:
 
     // ---- mutation ------------------------------------------------------
 
-    void push_back(const T& value) { data_.push_back(); }
+    void push_back(const T& value) { data_.push_back(value); }
 
     void clear() { data_.clear(); }
 
