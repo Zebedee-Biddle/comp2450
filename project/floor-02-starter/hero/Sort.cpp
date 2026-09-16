@@ -23,7 +23,10 @@
 //               and `benchmark sort` gives three timing columns on every row.
 
 #include "Sort.h"
+#include "Hero.h"
 #include <algorithm>  // you will want std::sort in sortInventory
+#include <sstream>
+#include <fstream>
 //#include <stringstream>
 
 namespace dungeon {
@@ -63,9 +66,7 @@ namespace {
    }
 
 
-void mergeSort(std::vector<Item>& inventory, const Comparator& cmp) {
-   Comparator byWeight = [](const Item& a, const Item& b) { return a.weight < b.weight; };
-   mergeSortImpl(inventory, 0, inventory.size(), cmp);
+
 }
 
 // ---- 2. Quicksort -------------------------------------------------------
@@ -100,17 +101,17 @@ void quicksort(std::vector<Item>& inventory, const Comparator& cmp) {
 
 // ---- 3. sortInventory (the seam) ----------------------------------------
 
-bool sortInventory(Hero& hero, const std::string& criterion) {
+static bool sortInventory(dungeon::Hero& hero, const std::string& criterion) {
    std::istringstream in(criterion);
    std::string key;
    std::string dir;
    in >> key >> dir;
 
    bool descending = (dir == "desc");
-   Comparator cmp = makeComparator(key, descending);
+   dungeon::Comparator cmp = dungeon::makeComparator(key, descending);
    if (! cmp) return false;
    else std::sort(hero.inventory.begin(), hero.inventory.end(), cmp);
    return true;
 }
 
-}  // namespace dungeon
+// namespace dungeon

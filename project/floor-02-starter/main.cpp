@@ -127,12 +127,12 @@ int main() {
                 std::cout << "Usage: sort inventory by <name|weight|value> [asc|desc]\n";
                 continue;
             }
-            // Glue key and direction back into one string so sortInventory
+            // Glue key and direction back into one string so dungeon::sortInventory
             // (which is YOUR code) only has to parse one argument shape.
             // This file stays stable; the parsing details belong to Sort.cpp.
             std::string criterion = key;
             if (!dir.empty()) criterion += " " + dir;
-            if (!sortInventory(hero, criterion)) {
+            if (!dungeon::sortInventory(hero, criterion)) {
                 std::cout << "Unknown sort key. Try: name, weight, or value.\n";
                 continue;
             }
