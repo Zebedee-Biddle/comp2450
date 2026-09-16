@@ -97,7 +97,7 @@ void runBenchmark(std::size_t n, std::size_t iterations) {
     auto runOnce = [&](const std::string& target) {
         double l = avgMicros([&]{ return linearSearch          (bestiary, target); }, iterations);
         double b = avgMicros([&]{ return binarySearch          (bestiary, target); }, iterations);
-        double r = avgMicros([&]{ return binarySearchRecursive(bestiary, target); }, iterations);
+        double r = avgMicros([&]{ return binarySearchRecursive(bestiary, target, 0, bestiary.size() - 1); }, iterations);
         return std::tuple<double,double,double>{l, b, r};
     };
 

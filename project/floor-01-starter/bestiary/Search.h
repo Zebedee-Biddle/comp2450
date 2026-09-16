@@ -33,7 +33,7 @@ const Monster* binarySearch(const std::vector<Monster>& bestiary,
 //   Use a static helper inside Search.cpp that takes (low, high) — your
 //   public function should keep this same signature.
 const Monster* binarySearchRecursive(const std::vector<Monster>& bestiary,
-                                     const std::string&         name);
+                                     const std::string&         name, size_t lo, size_t hi);
 
 // The function the rest of the game calls when it needs to look up a monster.
 // You decide which of the three searches above to delegate to.

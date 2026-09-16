@@ -34,7 +34,7 @@ const Monster* linearSearch(const std::vector<Monster>& bestiary,
     (void)name;
 }
 
-const Monster* binSearch(const std::vector<Monster>& bestiary, const std::string& name) {
+const Monster* binarySearch(const std::vector<Monster>& bestiary, const std::string& name) {
    size_t lo = 0, hi = bestiary.size() - 1;
    if (name < bestiary[0].name || name > bestiary[hi].name) return nullptr;
    size_t mid = hi >> 1;
@@ -47,13 +47,13 @@ const Monster* binSearch(const std::vector<Monster>& bestiary, const std::string
      else return nullptr;
 }
 
-const Monster* binSearchRecurs(const std::vector<Monster>& bestiary, const std::string& name, size_t lo = 0, size_t hi) {
+const Monster* binarySearchRecursive(const std::vector<Monster>& bestiary, const std::string& name, size_t lo, size_t hi) {
    size_t mid = lo + (hi - lo) >> 1;
    if (lo == hi) {
       if (name == bestiary[mid].name) return &bestiary[mid];
       else return nullptr;
-   } else if (name > bestiary[mid].name) return binSearchRecurs(bestiary, name, mid, hi);
-   else return binSearchRecurs(bestiary, name, lo, mid);
+   } else if (name > bestiary[mid].name) return binarySearchRecursive(bestiary, name, mid, hi);
+   else return binarySearchRecursive(bestiary, name, lo, mid);
 }
 
 const Monster* findMonster(const std::vector<Monster>& bestiary,
