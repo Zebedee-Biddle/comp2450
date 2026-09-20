@@ -197,7 +197,7 @@ namespace dungeon {
                 // readMenuChoice returns a MenuAction
                 // switch statement to select the
                 // corresp block of code
-                srand(rand() ^ time(0));
+                srand(rand() ^ time(0)); // Having the exact same luck over and over again has strong potential for boredom, exploitation, and frustration.
                 switch (readMenuChoice(menu)) {
                 case MenuAction::Attack:
                     // subtract player's damage from warden's hp
