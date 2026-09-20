@@ -20,8 +20,8 @@ namespace dungeon {
     namespace {
         // constexpr means these values are compile-time constants
         // k prefix --> means constant
-        int kPlayerStartHP = 30;
-        constexpr int kWardenStartHP = 50;
+        int kPlayerStartHP = 60;
+        constexpr int kWardenStartHP = 90;
         int kPlayerAttackDmg = 6;
         int kWardenAttackDmg = 4;
 
@@ -168,16 +168,29 @@ namespace dungeon {
                     << " - but it is not a consumable.\n";
             }
         }
+        struct Wormhole {
+            int wormholeTicks = 0;
+            BattleOutcome tickWormhole(int& hp, const std::string& hero) {
+                std::cout << "The wormhole in your cloak eats away at your flesh! ";
+                --wormholeTicks;
+                hp -= 5 + (rand() & 3) + (rand() & 3) + ((wormholeTicks / 7) * 3); // Deal 5-11dmg, preferring middle, plus 3dmg if >1 maximum-length first sentence away (due to stacking, etc. This makes sense because if there is stacking, subsequent summons MUST have omitted the inventory clear and thus need other forms of punishment).
+                std::cout << hero << "'s HP -> " << std::max(hp, 0) << ".\n";
+                if (hp <= 0) return BattleOutcome::Defeat;
+                if (!wormholeTicks) std::cout << "The wormhole in your cloak evaporates.\n";
+                return BattleOutcome::Fled;
+            }
+        };
     }
 
 
     BattleOutcome runWardenBattle(Hero& hero) {
         int qtyWardens = 0;
-        int wormholeTicks = 0;
+        Wormhole wormhole;
         // create two variables for the player and
         // warden health; represent the state
         int playerHP = kPlayerStartHP;
         int wardenHP = kWardenStartHP;
+        bool lastChance = true;
 
         // create a bag specialized to store
         // menuoption objects
@@ -189,7 +202,7 @@ namespace dungeon {
 
         // continue the battle ONLY while both participants
         // are alive
-        while (playerHP > 0 && wardenHP > 0) {
+        while (playerHP > 0 && wardenHP > 0) { CheatDeath: // The player cheats their physical death, and we cheat the loop's death. It is actually a pun, you see...
             try {
                 printMenu(menu, playerHP, wardenHP);
                 bool wardenATK = true;
@@ -197,15 +210,15 @@ namespace dungeon {
                 // readMenuChoice returns a MenuAction
                 // switch statement to select the
                 // corresp block of code
-                srand(rand() ^ time(0)); // Having the exact same luck over and over again has strong potential for boredom, exploitation, and frustration.
-                switch (readMenuChoice(menu)) {
+                srand(rand() ^ time(0)); srand(rand()); // Having the exact same luck over and over again has strong potential for boredom, exploitation, and frustration.
+                switch (readMenuChoice(menu)) { // Calling twice in a row because regular approach seems to clump crits.
                 case MenuAction::Attack:
                     // subtract player's damage from warden's hp
                     wardenHP -= kPlayerAttackDmg;
 
                     if (!(rand() & 3)) {
                         std::cout << "CRITICAL HIT!\n";
-                        wardenHP -= ++kPlayerAttackDmg + (rand() & 7); // Improved motivation improves performance (reason for ++).
+                        wardenHP -= ++kPlayerAttackDmg + (rand() & 7); // Improved motivation from improved performance improves performance and motivation and performance (reason for ++).
                     }
                     else {
                         std::cout << "You strike for " << kPlayerAttackDmg << ". ";
@@ -217,7 +230,7 @@ namespace dungeon {
                     std::cout << hero.heroName << " tried to get away... and did!"; // Did you get the reference? Probably not, EB run chances are _abysmal_...
                     return BattleOutcome::Fled; // Here we just hardcode 100%... the pendulum perhaps swung too far, but oh, well.
                 case MenuAction::UseItem: // No break necessary after a return.
-                    useItem(hero, playerHP);
+                    useItem(hero, playerHP); lastChance = true;
                     break;
                 case MenuAction::Inspect:
                     std::cout << "The Warden is an extremly wrathful being; once a human, yet now distorted beyond hope of recognition by MSVC function parsing bugs and cryptic LINK errors, he began to practice the dark arts - but deep down inside, to this day, he is really compensating out of his bitterness; for even after all of his other accomplishments, he could never master MSVC.\n";
@@ -225,7 +238,7 @@ namespace dungeon {
                 }    if (wardenATK) {
                     for (int i = 0; i <= qtyWardens; ++i) {
                         std::cout << "The Warden "; if (i) std::cout << "#" << i + 1 << ' ';
-                        switch (rand() % 28) {
+                        switch (rand() % 28) { // Replace with switch (17) to get the 'normal' attack everytime.
                         case 0:
                         case 16:
                             std::cout << "shouts taunts; " << hero.heroName << "'s ATK decreases by 6!\n";
@@ -244,8 +257,8 @@ namespace dungeon {
                         case 5:
                         case 6:
                             std::cout << "tosses a mysterious purple vial! Warden's HP -> " << wardenHP - ((kWardenAttackDmg + 1) >> 1) << "; ";
-                            playerHP -= kWardenAttackDmg << 1;
-                            wardenHP -= (kWardenAttackDmg + 1) >> 1;
+                            playerHP -= kWardenAttackDmg << 1; // This damages the player...
+                            wardenHP -= (kWardenAttackDmg + 1) >> 1; // But a bit splashes back.
                             break;
                         case 7:
                         case 8:
@@ -277,10 +290,10 @@ namespace dungeon {
                             std::cout << "summons a wormhole to the interior of your cloak! ";
                             if (!hero.inventory.empty()) {
                                 std::cout << "All of your items are stolen! ";
-                                wormholeTicks -= 4; // A shorter sentence is appropriate for the rather nasty co-occurrence of having all items stolen.
+                                wormhole.wormholeTicks -= 4; // A shorter sentence is appropriate for the rather nasty co-occurrence of having all items stolen.
                             }
                             hero.inventory.clear();
-                            wormholeTicks += 7 + (rand() & 3); // We want a longer sentence if the items are already stolen.
+                            wormhole.wormholeTicks += 7 + (rand() & 3); // We want a longer sentence if the items are already stolen.
                             break;
                         default:
                             std::cout << "strikes your torso. ";
@@ -288,21 +301,17 @@ namespace dungeon {
                             break;
                         }
                         std::cout << hero.heroName << "'s HP -> " << (playerHP = std::max(playerHP, 0)) << ".\n";
-                    } if (wormholeTicks > 0) {
-                        std::cout << "The wormhole in your cloak eats away at your flesh! ";
-                        --wormholeTicks;
-                        playerHP -= 5 + (rand() & 3) + (rand() & 1) + ((15 + (rand() & 7) * (wormholeTicks / 7)));
-                        std::cout << hero.heroName << "'s HP -> " << std::max(playerHP, 0) << ".\n";
-                        if (playerHP <= 0) return BattleOutcome::Defeat;
-                        if (!wormholeTicks) std::cout << "The wormhole in your cloak evaporates.\n";
-                    }
+                    } if (wormhole.wormholeTicks > 0) if (wormhole.tickWormhole(playerHP, hero.heroName) == BattleOutcome::Defeat)
+                        return BattleOutcome::Defeat;
                 }
             }
             catch (const std::exception& e) {
                 std::cout << "Error: " << e.what() << "; please try again.";
             }
         }
-        return BattleOutcome::Fled;
+        if (wardenHP <= 0) return BattleOutcome::Victory;
+        else if (rand() % 3) return BattleOutcome::Defeat;
+        else { playerHP = 1; std::cout << "But fate intervened! " << hero.heroName << " -> 1HP."; lastChance = false; goto CheatDeath; } // We do not want a last-chance HP immediately after it has already triggered; it can be reactivated in the battle, but only by healing.
     }
 
 }  // End namespace dungeon
