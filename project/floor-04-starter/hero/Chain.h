@@ -63,6 +63,12 @@ public:
     // The ctor/dtor bump the diagnostic counters above. That is the
     // only reason Node is not a plain aggregate.
     // -----------------------------------------------------------------
+
+    void Chain::push_front(const T& v) {
+        Node* n = new Node(v, head_);
+        head_ = n;
+        ++this->size_;
+    }
     struct Node {
        T     data;
        Node* next;
@@ -95,8 +101,9 @@ public:
     //
     // (clear() does the same job — implement it below and call it from
     // the destructor body if you prefer one source of truth.)
+   
     ~Chain() {
-        // TODO Floor 4 (Wednesday)
+       clear();
     }
 
     // -----------------------------------------------------------------
@@ -119,8 +126,8 @@ public:
     //
     // TODO Floor 4 (Friday) — change `= default` to `= delete` on both.
     // -----------------------------------------------------------------
-    Chain(const Chain&)            = default;   // TODO Friday: = delete
-    Chain& operator=(const Chain&) = default;   // TODO Friday: = delete
+    Chain(const Chain&)            = delete;   // TODO Friday: = delete
+    Chain& operator=(const Chain&) = delete;   // TODO Friday: = delete
 
     // -----------------------------------------------------------------
     // Inspection
@@ -129,8 +136,8 @@ public:
     // TODO Floor 4 (Monday) — return the cached size_.
     // We cache size so size() is O(1). Walking the chain to count would
     // be O(n) on every call; the log is queried by `log <n>` constantly.
-    std::size_t size() const { return size; }
-    bool        empty() const { return (! size()); }
+    std::size_t size() const { return this->size_; }
+    bool        empty() const { return (! this->size_); }
 
     // Raw head pointer. Callers walk the chain by hand:
     //     for (const Node* p = chain.head(); p; p = p->next) ...
@@ -152,17 +159,16 @@ public:
     //     Node* n = new Node(value, head_);
     //     head_   = n;
     //     ++size_;
-    void push_front(const T& v) { 
-       Node* n = new Node(v, head_);
-       head_ = n;
-       ++size;
-    }
 
     // Walk and delete every node. Leaves the chain empty.
     //
     // TODO Floor 4 (Wednesday). Same loop as the destructor.
     void clear() {
-        // TODO Wednesday
+       Node* next;
+       for (Node* i = head_; i; i = next) {
+          next = i->next;
+          delete i;
+       }
     }
 
 private:
