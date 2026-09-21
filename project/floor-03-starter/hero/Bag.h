@@ -75,8 +75,8 @@ public:
 
     T& at(std::size_t i) {
         // TODO Floor 3 (Fri): non-const version. Same body.
-        (void)i;
-        throw std::logic_error("TODO: Bag::at() not yet implemented (Floor 3 Fri)");
+        if (i >= size()) throw BagException(i, size());
+        else return data_[i];
     }
 
     // ---- mutation ------------------------------------------------------

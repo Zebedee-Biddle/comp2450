@@ -68,25 +68,6 @@ const Monster* findMonster(const Bag<Monster>& bestiary,
 // point of Wednesday's class-template lesson.
 
 template <typename T>
-const T* findByName(const Bag<T>& items, const std::string& name) {
-    // TODO Floor 3 (Mon):
-    //   Walk the container. Return the address of the first element
-    //   whose .name equals `name`. Return nullptr if none match.
-    //
-    //   Your body is about three lines. Resist the urge to write more.
-    //   The whole lesson is that this ONE body works for Monster AND
-    //   Item (and anything else with a .name) without you writing it
-    //   twice.
-    //
-    //   Try this in your head before you type:
-    //     - What does `for (const auto& it : items)` give you, since
-    //       `items` is a std::vector<T>?
-    //     - What expression takes the address of the current element?
-    //     - Floor 1's linearSearch is literally this function with T
-    //       hardcoded to Monster. Copy its SHAPE; drop the hardcode.
-    (void)items;
-    (void)name;
-    return nullptr;
-}
+const T* findByName(const Bag<T>& items, const std::string& name) {for (const T& n : items) if (n.name == name) return &n; return nullptr;}
 
 }  // namespace dungeon
