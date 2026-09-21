@@ -65,14 +65,16 @@ namespace {
       merge(v, lo, mid, hi, cmp);
    }
 
+}
 
-
+void mergeSort(std::vector<Item>& inventory, const Comparator& cmp) {
+    mergeSortImpl(inventory, 0, inventory.size() - 1, cmp);
 }
 
 // ---- 2. Quicksort -------------------------------------------------------
 
 std::size_t partition(std::vector<Item>& v, std::size_t lo, std::size_t hi, const Comparator cmp) {
-   std::size_t mid = lo + (hi - lo) >> 1;
+   std::size_t mid = lo + ((hi - lo) >> 1);
    std::swap(mid, hi);
    const Item pivot = v[hi];
 
@@ -95,23 +97,19 @@ void quickSortImpl(std::vector<Item> v, std::size_t lo, std::size_t hi, const Co
 
 void quicksort(std::vector<Item>& inventory, const Comparator& cmp) {
     quickSortImpl(inventory, 0, inventory.size() - 1, cmp);
-    (void)inventory;
-    (void)cmp;
-} }
-
-// ---- 3. sortInventory (the seam) ----------------------------------------
-
-static bool sortInventory(dungeon::Hero& hero, const std::string& criterion) {
-   std::istringstream in(criterion);
-   std::string key;
-   std::string dir;
-   in >> key >> dir;
-
-   bool descending = (dir == "desc");
-   dungeon::Comparator cmp = dungeon::makeComparator(key, descending);
-   if (! cmp) return false;
-   else std::sort(hero.inventory.begin(), hero.inventory.end(), cmp);
-   return true;
 }
 
-// namespace dungeon
+bool sortInventory(dungeon::Hero& hero, const std::string& criterion)
+{
+    std::istringstream in(criterion);
+    std::string key;
+    std::string dir;
+    in >> key >> dir;
+
+    bool descending = (dir == "desc");
+    dungeon::Comparator cmp = dungeon::makeComparator(key, descending);
+    if (!cmp) return false;
+    else std::stable_sort(hero.inventory.begin(), hero.inventory.end(), cmp);
+    return true;
+}
+}
