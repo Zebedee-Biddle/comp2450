@@ -1,0 +1,56 @@
+1. Transcript:
+
+> search Goblin
+Goblin   HP 8   ATK 2   weakness: fire
+> inventory
+   1.  Rusty sword       (wt 4.0, val 5)
+   2.  Healing potion    (wt 0.5, val 12)
+   3.  Iron key          (wt 0.1, val 0)
+   4.  Loaf of bread     (wt 0.1, val 1)
+   5.  Cloak of shadows  (wt 1.5, val 80)
+> sort inventory by value desc
+   1.  Cloak of shadows  (wt 1.5, val 80)
+   2.  Healing potion    (wt 0.5, val 12)
+   3.  Rusty sword       (wt 4.0, val 5)
+   4.  Loaf of bread     (wt 0.1, val 1)
+   5.  Iron key          (wt 0.1, val 0)
+> inspect 99
+No such item. (index 98 out of bounds for size 5)
+> log 8
+  1. error: index 98 out of bounds for size 5
+  2. sort inventory by value desc
+  3. inventory ΓÇö listed 5 items
+  4. search Goblin ΓÇö found in bestiary
+  5. search goblin ΓÇö not found
+  6. began session as "Zebedee C Biddle"
+ (newest first; chain length 6)
+> benchmark log 100000
+  N= 100000   Chain::push_front =    88.94 ms   Bag::insert(begin) = 736150.00 ms
+> selftest chain
+  Chain<int> allocations:  1000   deallocations:  1000   leaked:     0   OK
+> quit
+The forge cools. The chain dissolves link by link.
+
+2. selftest chain
+  Chain<int> allocations:  1000   deallocations:     0   leaked:  1000   LEAK ΓÇö implement ~Chain() / clear()
+All of the nodes leaked when removing the destructor.
+
+3. Error (active) E1776	function "dungeon::Chain<T>::Chain(const dungeon::Chain<T> &) [with T=int]" (declared at line 129 of "C:\Users\zebbi\OneDrive\Pictures\3512725078921426\GitHub\comp2450\project\floor-04-starter\hero\Chain.h") cannot be referenced -- it is a deleted function	the_descent.exe - x64-Debug	C:\Users\zebbi\OneDrive\Pictures\3512725078921426\GitHub\comp2450\project\floor-04-starter\main.cpp	71
+The error complained of line 129 of Chain.h. This is where the copy operation was deleted, and a copy is required to set b to a. If the compiler
+allowed the program to run, then depending on whether it imposed additional guardrails, two things could happen:
+1) The delete operation would cause the program to crash as soon as any copy was attempted, if this was checked.
+2) If this was skipped, then the new Chain would share all of the pointers with the old, and would from a _practical_ standpoint  behave more
+like a reference& than anything else, except that desyncs could still occur, having the potential to cause highly bizarre issues.
+2a) The program would also crash instantly when attempting to access the original, because it was deleted. Attempting to Grix-catch(...) {} this
+would cause who-knows what kinds of evil.
+
+4. benchmark log 100000
+  N= 100000   Chain::push_front =    88.59 ms   Bag::insert(begin) = 365973.26 ms
+std::vector::insert(begin()) is so slow in large n because with _every single_ insert, the _entire_ vector has to be copied and moved one to the 'right' in memory. A Chain does not pay
+this penalty because it can just change the definition of the 'front'. A vector also has to copy the entire vector thus far and reallocate somewhere else every time its size doubles; a
+Chain has no such requirement.
+
+5. Mavren is correct because a vector is more efficient for a bestiary (there is no reason why one would specifically need to push something to the front) and it provides O(1) access for
+finding the desired monster. A Chain would give O(n) access and risk being very slow for large bestiaries. Howeer, a Chain is better for an event log because every single event requires
+one to push something new to the front, and the act of logging itself would essentially become a CPU leak, making the game's save file permanently and continuously forever more bloated
+(at least as long as the log was kept), such that a sufficiently long playthrough would eventually become unplayable due to the minutes-long lag every time something attempted to be logged.

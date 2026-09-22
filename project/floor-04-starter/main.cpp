@@ -68,6 +68,7 @@ void printHelp() {
 }  // anonymous namespace
 
 int main() {
+//*/Chain<int> a; a.push_front(1); Chain<int> b = a;
     std::cout << "\n=== THE CHAIN VAULT ===\n\n";
 
     std::cout << "What is your name, adventurer? ";
