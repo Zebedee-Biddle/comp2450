@@ -121,8 +121,8 @@ public:
     //
     // Leaving this empty means a copy of a chain is silently empty.
     // The `clone hero` command will demonstrate the bug.
-    Chain(const Chain& /*other*/) {
-        // TODO Wednesday — deep copy.
+    Chain(const Chain& other) { 
+       for (const Node* p = other.head_; p; p = p->next) push_back(p->data);
     }
 
     // TODO Floor 4½ (Friday) — implement copy assignment.
@@ -150,11 +150,13 @@ public:
     //       More code, but no surprise about why it works.
     //
     // Pick one. Defend it in your lab notes.
-    Chain& operator=(const Chain& /*other*/) {
-        // TODO Friday — copy assignment.
-        return *this;
+    Chain& operator=(const Chain & other) {
+       if (this == &other) return *this;   // self-assignment guard
+       clear();
+       for (const Node* p = other.head_; p; p = p->next) {
+          push_back(p->data);
+       } return *this;
     }
-
     // Member swap — useful for copy-and-swap, useful for nothing else.
     // Pre-built so you can use it on Friday without thinking about it.
     void swap(Chain& other) noexcept {
@@ -174,8 +176,8 @@ public:
 
     // TODO Floor 4½ (Monday) — return tail_.
     // Used by `log --oldest`, which walks the chain backward via prev.
-    const Node* tail() const { return nullptr; /* TODO Monday */ }
-    Node*       tail()       { return nullptr; /* TODO Monday */ }
+    const Node* tail() const { return tail_; }
+    Node*       tail()       { return tail_; }
 
     // -----------------------------------------------------------------
     // Mutation — Floor 4's push_front kept, with a Floor 4½ extension.
@@ -198,7 +200,8 @@ public:
     // -----------------------------------------------------------------
     void push_front(const T& value) {
         Node* n = new Node(value, nullptr, head_);
-        // TODO Monday — wire prev/tail consistency (see comment above).
+        if (head_) head_->prev = n;
+        else tail_ = n;
         head_ = n;
         ++size_;
     }
@@ -211,8 +214,12 @@ public:
     //     else                  head_ = n;
     //     tail_ = n;
     //     ++size_;
-    void push_back(const T& /*value*/) {
-        // TODO Monday
+    void push_back(const T& value) {
+        Node* n = new Node(value, tail_, nullptr);
+        if (tail_) tail_->next = n;
+        else head_ = n;
+        tail_ = n;
+        ++size_;
     }
 
     // TODO Floor 4½ (Friday) — remove the front node. O(1).
@@ -225,7 +232,12 @@ public:
     //      If it IS null, the chain is now empty — set tail_ = nullptr too.
     //   5. --size_.
     void pop_front() {
-        // TODO Friday
+        if (head_ == nullptr) return;
+        Node* head = head_->next; // Here is to hoping for a ->= operator...
+        delete head_;
+        if (!(head_ = head)) tail_ = nullptr;
+        head_->prev = nullptr;
+        --size;
     }
 
     // TODO Floor 4½ (Friday) — remove the back node. O(1) BECAUSE of prev.
@@ -241,7 +253,11 @@ public:
     // Question for the lab: why is this O(n) on a singly-linked chain
     // *even if it has a tail_ pointer*?
     void pop_back() {
-        // TODO Friday
+        if (head_ == nullptr) return;
+        Node* tail = tail_->prev;
+        delete tail_;
+        if (!(tail_ = tail)) tail_ = nullptr;
+        tail_->next = nullptr;
     }
 
     // Walk and delete every node. Floor 4 version — unchanged loop body,
