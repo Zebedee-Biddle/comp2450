@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "../hero/Bag.h"
 #include "Monster.h"
@@ -63,10 +64,8 @@ const Monster* findMonster(const std::vector<Monster>& bestiary,
 
 template <typename T>
 const T* findByName(const Bag<T>& items, const std::string& name) {
-    for (const auto& it : items) {
-        if (it.name == name) return &it;
-    }
-    return nullptr;
-}
-
+    auto it = std::find_if(items.begin(), items.end(), [&name](const T& x) {return x.name == name; });
+    return (it != items.end()) ? &*it : nullptr;
+}  // Had had James, while John had had had had had had had had; had had had had had had had had James's better effect on the teacher
+   // could have been shared with him.
 }  // namespace dungeon

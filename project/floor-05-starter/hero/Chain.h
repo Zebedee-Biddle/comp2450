@@ -35,7 +35,7 @@
 namespace dungeon {
 
 namespace detail {
-struct NodeStats {
+struct NodeStats { 
     static inline std::size_t allocations   = 0;
     static inline std::size_t deallocations = 0;
     static void reset() { allocations = 0; deallocations = 0; }
@@ -107,8 +107,8 @@ public:
         //
         //   pre-decrement:    p_ = p_ ? p_->prev : owner_->tail_;  return *this;
         //   post-decrement:   iterator tmp = *this;  --(*this);  return tmp;
-        iterator& operator--()    { /* TODO Friday */                       return *this; }
-        iterator  operator--(int) { /* TODO Friday */ iterator t = *this;   return t;     }
+        iterator& operator--() { p_ = p_ ? p_->prev : owner_->tail_; return *this; }
+        iterator  operator--(int) { const_iterator t = *this; p_ ? p_->prev : owner_->tail_; return t; }
 
         // TODO Floor 5 (Monday) — compare the underlying Node*.
         // (owner_ is not part of identity — two iterators into the same
@@ -155,19 +155,19 @@ public:
 
         // TODO Floor 5 (Wednesday) — advance via p_->next, exactly as
         // iterator does, just on a const Node*.
-        const_iterator& operator++()    { /* TODO Wednesday */                            return *this; }
-        const_iterator  operator++(int) { /* TODO Wednesday */ const_iterator t = *this;  return t;     }
+        const_iterator& operator++() { p_ = p_->next; return *this; }
+        const_iterator  operator++(int) { const_iterator t = *this; p_ = p_->next; return t; }
 
         // TODO Floor 5 (Friday) — retreat via p_->prev, with the same
         // end-of-chain fallback as iterator::operator--:
         //   p_ = p_ ? p_->prev : owner_->tail_;
-        const_iterator& operator--()    { /* TODO Friday */                               return *this; }
-        const_iterator  operator--(int) { /* TODO Friday */ const_iterator t = *this;     return t;     }
+        const_iterator& operator--() { p_ = p_ ? p_->prev : owner_->tail; return *this; }
+        const_iterator  operator--(int) { const_iterator t = *this; p_ ? p_->prev : owner_->tail; return t; }
 
         // TODO Floor 5 (Wednesday) — return p_ == other.p_;  stub is TRUE
         // for the same reason as iterator (loops skip; build stays green).
-        bool operator==(const const_iterator& /*other*/) const { return true; /* TODO Wednesday */ }
-        bool operator!=(const const_iterator& other)     const { return !(*this == other); }
+        bool operator==(const const_iterator& other) const { return p_ == other.p_; }
+        bool operator!=(const const_iterator& other)     const { return p_ != other.p_; }
 
     private:
         const Node*  p_;
