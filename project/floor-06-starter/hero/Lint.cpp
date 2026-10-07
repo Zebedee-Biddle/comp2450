@@ -46,8 +46,26 @@ namespace dungeon {
 //     }
 //     return s.empty();
 
-bool isBalanced(const std::string& /*input*/) {
-    return false;   // TODO Wednesday
+bool isBalanced(const std::string& str) {
+   Stack<char> stk;
+   for (const auto& chr : str) if (chr == '{' || chr == '}' || chr == '(' || chr == ')' || chr == '[' || chr == ']') stk.push(chr);
+
+   enum class chrt {BRACE, PAREN, BRACKET, START};
+   Stack<chrt> prevChrT;
+   prevChrT.push(chrt::START);
+
+   for (bool first = true; !stk.empty(); first = false) {
+	   char cmp = stk.top(); stk.pop();
+	   switch (cmp) {
+	   case '}': prevChrT.push(chrt::BRACE); break;
+	   case ')': prevChrT.push(chrt::PAREN); break;
+	   case ']': prevChrT.push(chrt::BRACKET); break;
+	   case '{': if (prevChrT.top() != chrt::BRACE) return false; else prevChrT.pop(); if (prevChrT.empty()) return false; break;
+	   case '(': if (prevChrT.top() != chrt::PAREN) return false; else prevChrT.pop(); if (prevChrT.empty()) return false; break;
+	   default: if (prevChrT.top() != chrt::BRACKET) return false; else prevChrT.pop(); if (prevChrT.empty()) return false;
+	   }
+   }
+   return prevChrT.top() == chrt::START;
 }
 
 }  // namespace dungeon
