@@ -6,13 +6,6 @@
 #include "Queue.h"
 
 namespace dungeon {
-
-// TODO Floor 7 (Wednesday).
-//
-// The classic FIFO elimination algorithm. Load names into a Queue,
-// then rotate (front -> back) k-1 times and dequeue the unlucky one.
-// Repeat until one remains.
-//
 //   * Handle the empty-input case up front — return "" if names empty.
 //   * The single-element case shakes out naturally — the loop never
 //     enters, and front() returns the survivor.
@@ -37,8 +30,10 @@ namespace dungeon {
 // surface area of this algorithm. No indexing, no random access. That
 // is what "FIFO is enough for some problems" means in code.
 
-std::string hotPotato(const std::vector<std::string>& /*names*/, std::size_t /*k*/) {
-    return "(hotPotato unimplemented)";   // TODO Wednesday
+std::string hotPotato(const std::vector<std::string>& potatoes, std::size_t k /* But why _k_? */) {
+   Queue<std::string> taters; for (const auto& p : potatoes) taters.enqueue(p); // 24w14potato [_sic_] commit
+   while (taters.size() > 1) { for (int i = 0; i < k - 1; ++i) { taters.enqueue(taters.front()); taters.dequeue(); } taters.dequeue(); }
+   return taters.front();
 }
 
 }  // namespace dungeon
