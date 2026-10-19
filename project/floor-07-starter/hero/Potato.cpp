@@ -2,7 +2,7 @@
 // hero/Potato.cpp — body of hotPotato.  THE WORK IS HERE (Wednesday).
 
 #include "Potato.h"
-
+#include <iostream>
 #include "Queue.h"
 
 namespace dungeon {
@@ -31,9 +31,12 @@ namespace dungeon {
 // is what "FIFO is enough for some problems" means in code.
 
 std::string hotPotato(const std::vector<std::string>& potatoes, std::size_t k /* But why _k_? */) {
-   Queue<std::string> taters; for (const auto& p : potatoes) taters.enqueue(p); // 24w14potato [_sic_] commit
-   while (taters.size() > 1) { for (int i = 0; i < k - 1; ++i) { taters.enqueue(taters.front()); taters.dequeue(); } taters.dequeue(); }
-   return taters.front();
+   if (potatoes.empty()) return ""; else {
+      Queue<std::string> taters; for (const auto& p : potatoes) taters.enqueue(p); // 24w14potato [_sic_] commit
+      while (taters.size() > 1) { for (int i = 0; i < k - 1; ++i) { taters.enqueue(taters.front()); taters.dequeue();
+      } std::cout << taters.front() << " has met their demise.\n"; taters.dequeue(); }
+      return taters.front();
+   }
 }
 
 }  // namespace dungeon
