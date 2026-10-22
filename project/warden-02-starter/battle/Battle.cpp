@@ -74,7 +74,7 @@ MenuAction readMenuChoice(const Bag<MenuOption>& menu) {
 // Apply the named item to the player's HP.  Shared between BOTH wardens
 // because the inventory + heal mechanic does not change between them —
 // only the max-HP cap does.
-bool useItem(Hero& hero, int& playerHP, int maxHP) {
+bool useItem(Hero& hero, int& playerHP, int maxHP, int* atk = nullptr, int* crit = nullptr, int* foeATK = nullptr, int* foeDEF = nullptr) {
     if (hero.inventory.empty()) {
         std::cout << "  Your satchel is empty.\n";
         return false;
@@ -92,7 +92,15 @@ bool useItem(Hero& hero, int& playerHP, int maxHP) {
     if (!it) throw BagException(0, hero.inventory.size());
     if (it->name.find("otion") != std::string::npos) {
         playerHP = std::min(playerHP + 12, maxHP);
-        std::cout << "  You drink " << it->name << ". HP -> " << playerHP << ".\n";
+        std::cout << "  You drink the " << it->name << ". HP -> " << playerHP << ".\n";
+    } else if (it->name.find("word") != std::string::npos && foeATK) {
+       --(*foeATK);
+       *foeDEF -= 2;
+       std::cout << "  You pulverize the " << it->name << " into an asthmic powder, decreasing the target's ATK by 1 and DEF by 2.\n";
+    } else if (it->name.find("loak") != std::string::npos && crit) {
+       const int storedCrit = *crit;
+       *crit += (std::max(0, ++(*crit)) >> 2) + 1700;
+       std::cout << "  Guts went up by " << ((*crit - storedCrit) / 40) << "!\n";
     } else {
         std::cout << "  You ready " << it->name << " — but it is not a consumable.\n";
     }
@@ -261,65 +269,166 @@ BattleOutcome runWardenBattle(Hero& hero) {
 //      iterator, the undo stack is pushed before mutating, the wave
 //      really is a Queue<Enemy>.
 
-BattleOutcome runWaveSurvival(Hero& hero, int waves) {
-    // TODO — write the wave-survival encounter. Suggested outline:
-    //
-    //   if (waves < 1) waves = 1;
-    //   int playerHP = 40;
-    //
-    //   Bag<...> menu;  // five options (see above)
-    //   Stack<UndoAction> battleUndo;  // local, OR use hero.undoStack
-    //   bool undoUsedThisTurn = false;
-    //
-    //   hero.eventLog.push_front("battle waves N — yard opens");
-    //
-    //   for (int w = 1; w <= waves; ++w) {
-    //       Queue<Enemy> line = buildWave(w);  // your helper
-    //       hero.eventLog.push_front("wave w enters …");
-    //
-    //       while (!line.empty() && playerHP > 0) {
-    //           try {
-    //               print state + menu
-    //               read choice
-    //               switch (choice) {
-    //                   case Attack:     snapshot, undoUsed=false,
-    //                                    damage front, dequeue if dead
-    //                                    else retaliate.
-    //                   case UseItem:    snapshot, undoUsed=false,
-    //                                    useItem(...); retaliate.
-    //                   case InspectLog: printLog(eventLog.begin(),
-    //                                             eventLog.end(), N,
-    //                                             "newest first",
-    //                                             eventLog.size());
-    //                                    FREE — do NOT advance turn.
-    //                   case Undo:       if undoUsed → block.
-    //                                    if battleUndo.empty() → block.
-    //                                    else: pop, restore HP+inv.
-    //                                    undoUsed=true.  FREE.
-    //                   case Flee:       return BattleOutcome::Fled.
-    //               }
-    //           }
-    //           catch (const BagException& e) {
-    //               std::cout << "  " << e.what() << " — try again.\n";
-    //           }
-    //       }
-    //
-    //       if (playerHP <= 0) return BattleOutcome::Defeat;
-    //       wave cleared — announce.
-    //   }
-    //
-    //   return BattleOutcome::Victory;
-    //
-    // Decompose into helpers however you want.  buildWave, printWaveMenu,
-    // readWaveChoice, recordBattleUndo are the four natural extractions.
-    // The contract main.cpp depends on is just runWaveSurvival(Hero&, int).
-    //
-    // Replace the placeholder body below.
+BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name because I mistyped it many times in Warden 1.
+   bool EvalChnc(const int probabilityOf20000);
+   int EvalDmg(const int atk, const float critDmg, const int def, const bool isCrit); // Evals attacks by non-players.
+   int EvalPlayerDmg(const int atk, int& critChance, float& critDmg, const int def);  // Evals attacks by players.
 
-    (void)hero; (void)waves;
-    std::cout << "  (Wave-survival scaffold — runWaveSurvival is not yet written.)\n"
-              << "  (Open battle/Battle.cpp and follow the TODOs.)\n";
-    return BattleOutcome::Fled;
+   waves = (waves < 1) ? 1 : waves;
+   constexpr int startPlayerHP = 40, startPlayerATK = 7, startPlayerDEF = 0, startPlayerMissChnc = 750, startPlayerCritChnc = 1'000, startPlayerDodgeChnc = 1'000;
+   constexpr float startPlayerCritDmg = 2.25f; // In _real_ games, people use single precision. Excepting Minecraft Java, but that has... other issues.
+   int playerMaxHP = startPlayerHP, playerHP = playerMaxHP, playerATK = startPlayerATK, playerDEF = startPlayerDEF,
+   playerMissChnc = startPlayerMissChnc, playerCritChnc = startPlayerCritChnc, playerDodgeChnc = startPlayerDodgeChnc;
+   float playerCritDmg = startPlayerCritDmg;
+
+   struct Enemy { // Dodge etc. are chances out of 20'000. NOTE: I ended up not using most of this...
+      int hp, atk, def, dodge, miss, crit, magdef;
+      std::string name;
+      Enemy(const std::string& name, int hp, int atk, int def = 0, int dodge = 0, int miss = 0, int crit = 0, int magdef = 0) {
+         this->name = name; this->hp = hp; this->atk = atk; this->def = def; this->dodge = dodge; this->miss = miss; this->crit = crit; this->magdef = magdef;
+      }
+   };
+
+   class adsjknvfPleaseDontDeclareMultipleOfTheseThisVeryLongNameShouldPreventMeHopefully { // A single-instance undo handler...
+      Stack<UndoAction> history;
+      bool undoUsed = false;
+   public:
+      void push(const std::string& desc, const Hero& player, const int playerHP) {
+         history.push({ desc, player.inventory, playerHP });
+         undoUsed = false;
+      }
+      bool restore(Hero& player, int& playerHP) {
+         if (history.empty()) { std::cout << "The Vault has no memory of any previous actions of yours.\n"; return true; }
+         else if (undoUsed) {
+            std::cout << "You have already used your undo for that turn; the Vault sees your greed and counts it against you.\n";
+            return true;
+         } else {
+            undoUsed = true;
+            const UndoAction tmp = history.top(); history.pop();
+
+            player.inventory = tmp.inventorySnapshot;
+            playerHP = tmp.playerHP;
+            return false;
+         }
+      }
+   } undoHandler; // ... the single instance declared here.
+
+   player.eventLog.push_front("Battle waves " + std::to_string(waves) + " -- the yard opens\n"); // I debated adding 48 and reinterpret_casting<char>, but on the off chance that this requires more than nine waves...
+
+   for (int w = 1; w <= waves; ++w) {
+      Queue<Enemy> line;
+      for (int i = 1; i <= w + 1; ++i) {
+         if (i % 3 == 0) line.enqueue(Enemy("Imp #" + std::to_string(i), 8, 3, w)); // Perhaps the constructor was a bad idea...
+         else if (i % 3 == 1) line.enqueue(Enemy("Rat #" + std::to_string(i), 4, 5 + w, 7));
+         else line.enqueue(Enemy("Skeleton #" + std::to_string(i), 7 + i << w, 4, 6));
+      }
+      while (!line.empty()) {
+         bool retaliate = true;
+         const Enemy& front = line.front();
+         std::cout << "\n -- Wave " << w << '/' << waves << "; your HP: " << playerHP << ", enemies remaining: " << line.size() <<
+         ".\nEnemy at front of line: " << front.name << " (HP: " << front.hp << ", ATK: " << front.atk << ", DEF: " << front.def << ").\n";
+
+         std::cout << "How would you like to deal with the problem? Options:\n\n" <<
+         "1. Attack " << front.name << '\n' <<
+         "2. Use item\n"                    <<
+         "3. Inspect log (free action)\n"   <<
+         "4. Undo\n"                        <<
+         "5. Flee\n"                        <<
+         "\n(Your response here): "         ;
+
+         std::string input; if (!getline(std::cin, input)) { // I am not sure what this condition is for but it was in the video.
+            player.eventLog.push_front("Battle waves -- fled");
+            return BattleOutcome::Fled;
+         }
+
+         int intput; // It's because it's an input that's... nevermind.
+         try {
+            std::size_t len;
+            intput = std::stoi(input, &len);
+#pragma warning (suppress:) // Bitwise and logical OR do the same thing in this context, why is MSVC complaining...
+            if (input.find_first_not_of(" \t\r", len) != std::string::npos | intput < 1 | intput > 5) {
+               std::cout << "Enter a number between 1 and 5, inclusive: ";
+               continue;
+            }
+         } catch (const std::exception&) {
+            std::cout << "Enter a _number_ between 1 and 5, inclusive: ";
+            continue;
+         }
+         Enemy& foe = line.front();
+         try { switch (intput) {
+         case 1: // Priority is miss > crit > dodge > normal attack.
+            std::cout << player.heroName << " attacks " << foe.name;
+            if (EvalChnc(playerMissChnc)) std::cout << " - just missed!\n"; // We still be going for EB aesthetic here. Perhaps dissonant, but dissonance can create humour (see Bathos).
+            else if (int dmg; EvalChnc(playerCritChnc)) {
+               foe.hp -= dmg = EvalPlayerDmg(playerATK, playerCritChnc, playerCritDmg, foe.def); 
+               std::cout << ".\nSMAAAASH!!\n" << std::max(2, int(playerATK * (1.0f + std::max(0.0f, playerCritDmg)) + 0.625f) - std::min(foe.def, (foe.def + 1) >> 1)) << "HP of damage to " << foe.name << "!\n";
+               if ((rand() & 4) == 0) {
+                  std::cout << "You are hit with adrenaline! " << player.heroName << "'s ATK went up by 1!\n"; // EB aesthetic is complete with consistently inconsistent tense and possession.
+               }
+            } else if (EvalChnc(foe.dodge)) std::cout << ". " << foe.name << " dodged quickly!\n";
+            else { // Normal path here (boo)
+               foe.hp -= std::max(1, playerATK - foe.def);
+               std::cout << "; " << std::max(1, playerATK - foe.def) << "HP of damage to " << foe.name << "!\n";
+            }
+            undoHandler.push("attacked " + foe.name, player, playerHP);
+
+            if (foe.hp <= 0) {
+               std::cout << foe.name << " returned to the dust of the earth!\n";
+               line.dequeue();
+               retaliate = false;
+            }
+            
+            break;
+         case 2: // Item
+            undoHandler.push("used item", player, playerHP);
+            try {
+               useItem(player, playerHP, playerMaxHP, &playerATK, &playerCritChnc, &(foe.atk), &(foe.def));
+            } catch (const BagException& e) {
+               std::cout << "ERROR: " << e.what() << "; please try again.";
+            }
+            break;
+         case 3:
+            printLog(player.eventLog.begin(), player.eventLog.end(), 7, "newest first", player.eventLog.size());
+            break;
+         case 4:
+            undoHandler.restore(player, playerHP);
+            retaliate = false;
+            break;
+         case 5:
+            player.eventLog.push_front("Battle waves -- fled");
+            return BattleOutcome::Fled;
+         }
+
+         if (retaliate) {
+            int dmg = std::max(1, foe.atk - playerDEF);
+            std::cout << (playerHP -= dmg, foe.name) << " attacks you! " << dmg << " HP of damage to " << player.heroName << "!\n";
+            if (playerHP <= 0) {
+               player.eventLog.push_front("Battle waves -- died");
+               std::cout << player.heroName << " got hurt and collapsed!\n";
+               return BattleOutcome::Defeat;
+            }
+         }
+
+         } catch (const std::exception&) {
+            continue;
+         }
+      }
+   }
+   player.eventLog.push_front("Battle waves -- victorious");
+   return BattleOutcome::Victory; // FIXME
 }
 
 }  // namespace dungeon
+
+bool EvalChnc(const int probabilityOf20000) {
+   return probabilityOf20000 > rand() % 20'000;
+}
+int EvalDmg(const int atk, const float critDmg, const int def, const bool isCrit) {
+   return std::max(2, int(atk * (1.0f + std::max(0.0f, critDmg)) + 0.625f) - std::max(0, def));
+}
+int EvalPlayerDmg(const int atk, int& critChance, float& critDmg, const int def) {
+   const int preIncDmg = std::max(2, int(atk * (1.0f + std::max(0.0f, critDmg)) + 0.625f) - std::min(def, (def + 1) >> 1));
+   critDmg += 0.025f + 0.005f * std::max(0.0f, critDmg); // When that adrenaline hits...
+   critChance += 150; // 0.75%
+   return preIncDmg;
+}

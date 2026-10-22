@@ -106,8 +106,9 @@ public:
     //     parent->children.push_back(child);
     //     return child;
     Node* addChild(Node* parent, const T& value) {
-        (void)parent; (void)value;   // silence unused-parameter warnings while stubbed
-        return nullptr;              // TODO Monday
+       Node* child = new Node(value, parent);
+       parent->children.push_back(child);
+       return child;
     }
 
     // Total number of nodes in the tree. Recursive: one node, plus the
@@ -156,9 +157,13 @@ public:
     //             q.enqueue(cur->children[i]);
     //     }
     std::vector<T> levelOrder() const {
-        std::vector<T> out;
-        // TODO Wednesday
-        return out;
+        std::vector<T> out; if (root_ == nullptr) return out;
+        Queue<Node*> q; q.enqueue(root_);
+        while (!q.empty()) {
+           Node* cur = q.front(); q.dequeue();
+           out.push_back(cur->data);
+           for (std::size_t i = 0; i < cur->children.size(); ++i) q.enqueue(cur->children[i]);
+        } return out;
     }
 
     // ----- Friday ----------------------------------------------------
