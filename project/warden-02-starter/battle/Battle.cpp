@@ -290,7 +290,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
    };
 
    class adsjknvfPleaseDontDeclareMultipleOfTheseThisVeryLongNameShouldPreventMeHopefully { // A single-instance undo handler...
-      Stack<UndoAction> history;
+      Stack<UndoAction> history; // That is my Floor 6
       bool undoUsed = false;
    public:
       void push(const std::string& desc, const Hero& player, const int playerHP) {
@@ -308,6 +308,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
 
             player.inventory = tmp.inventorySnapshot;
             playerHP = tmp.playerHP;
+            player.eventLog.push_front('"' + tmp.description + "\" undone");
             return false;
          }
       }
@@ -337,7 +338,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
          "\n(Your response here): "         ;
 
          std::string input; if (!getline(std::cin, input)) { // I am not sure what this condition is for but it was in the video.
-            player.eventLog.push_front("Battle waves -- fled");
+            player.eventLog.push_front("Battle waves -- fled " + w);
             return BattleOutcome::Fled;
          }
 
@@ -360,22 +361,26 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
             std::cout << player.heroName << " attacks " << foe.name;
             if (EvalChnc(playerMissChnc)) std::cout << " - just missed!\n"; // We still be going for EB aesthetic here. Perhaps dissonant, but dissonance can create humour (see Bathos).
             else if (int dmg; EvalChnc(playerCritChnc)) {
-               foe.hp -= dmg = EvalPlayerDmg(playerATK, playerCritChnc, playerCritDmg, foe.def); 
-               std::cout << ".\nSMAAAASH!!\n" << std::max(2, int(playerATK * (1.0f + std::max(0.0f, playerCritDmg)) + 0.625f) - std::min(foe.def, (foe.def + 1) >> 1)) << "HP of damage to " << foe.name << "!\n";
+               foe.hp -= dmg = EvalPlayerDmg(playerATK, playerCritChnc, playerCritDmg, foe.def);
+               std::cout << ".\nSMAAAASH!!\n" << dmg << "HP of damage to " << foe.name << "!\n";
                if ((rand() & 4) == 0) {
                   std::cout << "You are hit with adrenaline! " << player.heroName << "'s ATK went up by 1!\n"; // EB aesthetic is complete with consistently inconsistent tense and possession.
                }
+               player.eventLog.push_front("Battle waves -- crit against " + foe.name + " for " + std::to_string(dmg) + "HP");
             } else if (EvalChnc(foe.dodge)) std::cout << ". " << foe.name << " dodged quickly!\n";
             else { // Normal path here (boo)
                foe.hp -= std::max(1, playerATK - foe.def);
+               player.eventLog.push_front("Battle waves -- attacked " + foe.name + " for " + std::to_string(std::max(1, playerATK - foe.def)) + "HP");
                std::cout << "; " << std::max(1, playerATK - foe.def) << "HP of damage to " << foe.name << "!\n";
             }
             undoHandler.push("attacked " + foe.name, player, playerHP);
 
             if (foe.hp <= 0) {
-               std::cout << foe.name << " returned to the dust of the earth!\n";
                line.dequeue();
                retaliate = false;
+               player.eventLog.push_front("Battle waves -- terminated " + foe.name + (line.empty() ? "" : (", " + line.front().name +
+                  "up next"))); // Yes, I am intentionally using a dangling reference. No, it is not going to cause any problems in the 3ns it takes between freeing the memory and its last use; I tested.
+               std::cout << foe.name << " returned to the dust of the earth!\n";
             }
             
             break;
@@ -394,7 +399,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
             break;
          case 4:
             undoHandler.restore(player, playerHP);
-            retaliate = false;
+            retaliate = false; // The requirements told me this is necessary... even though this allows repeated attacking and restoring your HP...
             break;
          case 5:
             player.eventLog.push_front("Battle waves -- fled");
@@ -403,7 +408,8 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
 
          if (retaliate) {
             int dmg = std::max(1, foe.atk - playerDEF);
-            std::cout << (playerHP -= dmg, foe.name) << " attacks you! " << dmg << " HP of damage to " << player.heroName << "!\n";
+            std::cout << (playerHP -= dmg, foe.name) << " attacks you! " << dmg << "HP of damage to " << player.heroName << "!\n";
+            player.eventLog.push_front("Battle waves -- hit by " + foe.name + " for " + std::to_string(dmg) + "HP");
             if (playerHP <= 0) {
                player.eventLog.push_front("Battle waves -- died");
                std::cout << player.heroName << " got hurt and collapsed!\n";
@@ -425,7 +431,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
 bool EvalChnc(const int probabilityOf20000) {
    return probabilityOf20000 > rand() % 20'000;
 }
-int EvalDmg(const int atk, const float critDmg, const int def, const bool isCrit) {
+int EvalDmg(const int atk, const float critDmg, const int def, const bool isCrit) { // Wait... I don't actually use this...
    return std::max(2, int(atk * (1.0f + std::max(0.0f, critDmg)) + 0.625f) - std::max(0, def));
 }
 int EvalPlayerDmg(const int atk, int& critChance, float& critDmg, const int def) {

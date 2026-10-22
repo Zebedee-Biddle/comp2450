@@ -12,7 +12,8 @@ AI is welcome to *check* your answers; it is not welcome to *write your sentence
 
 > Your encounter's **event log** (every "Aric strikes Imp for 6", every "Imp retaliates for 3") is appended to `hero.eventLog`, which is a `Chain<std::string>`. Defend that against a `Bag<std::string>` (vector-backed) in terms of one operation the battle actually performs — naming the Big-O of that operation in `Chain` and in `Bag`. *Hint: think about what `Bag` has to do the moment its capacity is exceeded.*
 
-(your answer — 50–100 words)
+A Bag would suffer continuouslly degrading performance as it grew, due to the fact that it has to completely relocate its entire self everytime its size doubles and the fact that either
+its insertion or removal _must_ be O(1) (since one of these must occur on the front of the vector, shifting everything).
 
 ---
 
@@ -32,7 +33,8 @@ AI is welcome to *check* your answers; it is not welcome to *write your sentence
 
 > Your `undo` command pops the most recent action off a `Stack<UndoAction>` and restores its snapshot. Defend the choice of stack against a queue or a deque in one sentence — referencing the *contract* of LIFO (not the implementation). Then one extra sentence: name one piece of battle state that your `undo` *intentionally does not* restore, and explain why the player won't mind.
 
-(your answer — 50–100 words)
+A queue would only allow undoing the _first_ action, and subsequent undos would bring back more recent actions than that - very cursed. A deque is error-prone due to the risk of acci-
+dentally using the wrong operation, and theoretically stacks can be singly-linked to save memory over deques (not that ours does that...)
 
 ---
 
@@ -40,4 +42,6 @@ AI is welcome to *check* your answers; it is not welcome to *write your sentence
 
 > Each wave's enemies sit in a `Queue<Enemy>` in arrival order. Explain — in one sentence — what *visibly* changes for the player if you swap `Queue<Enemy>` for `Stack<Enemy>`: which enemy gets attacked first, and in what order the rest are picked off.
 
-(your answer — one or two sentences)
+If using a Stack<Enemy>, then the newest enemies added would be the first to attack. This is not necessarily a problem if this fact is accounted for in programming, but it is more error-
+prone and my current loop (of increasing the stats of later enemies from a constant baseline) is one of the many examples of things which would be materially more difficult to implement
+in reverse.
