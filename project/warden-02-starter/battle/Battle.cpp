@@ -318,9 +318,9 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
    for (int w = 1; w <= waves; ++w) {
       Queue<Enemy> line;
       for (int i = 1; i <= w + 1; ++i) {
-         if (i % 3 == 0) line.enqueue(Enemy("Imp #" + std::to_string(i), 8, 3, w)); // Perhaps the constructor was a bad idea...
-         else if (i % 3 == 1) line.enqueue(Enemy("Rat #" + std::to_string(i), 4, 5 + w, 7));
-         else line.enqueue(Enemy("Skeleton #" + std::to_string(i), 7 + i << w, 4, 6));
+         if (i % 3 == 0) line.enqueue(Enemy("Imp #" + std::to_string((i + 2) / 3), 8, 3, w)); // Perhaps the constructor was a bad idea...
+         else if (i % 3 == 1) line.enqueue(Enemy("Rat #" + std::to_string((i + 2) / 3), 4, 5 + w, 7));
+         else line.enqueue(Enemy("Skeleton #" + std::to_string((i + 2) / 3), 7 + (i << w), 4, 6));
       }
       while (!line.empty()) {
          bool retaliate = true;
@@ -384,11 +384,13 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
             try {
                useItem(player, playerHP, playerMaxHP, &playerATK, &playerCritChnc, &(foe.atk), &(foe.def));
             } catch (const BagException& e) {
-               std::cout << "ERROR: " << e.what() << "; please try again.";
+               std::cout << "ERROR: " << e.what() << "; please try again.\n";
+               retaliate = false;
             }
             break;
          case 3:
             printLog(player.eventLog.begin(), player.eventLog.end(), 7, "newest first", player.eventLog.size());
+            retaliate = false;
             break;
          case 4:
             undoHandler.restore(player, playerHP);
