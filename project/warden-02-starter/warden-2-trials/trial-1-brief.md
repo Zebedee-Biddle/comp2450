@@ -22,10 +22,11 @@ its insertion or removal _must_ be O(1) (since one of these must occur on the fr
 > When the player picks the **Inspect log** menu option, your encounter calls `printLog(hero.eventLog.begin(), hero.eventLog.end(), 5, ...)` — the same function template your Floor 5 iterators brought to life. (Because `eventLog` is built with `push_front` everywhere, the *front* of the chain is the most recent entry; the forward iterator walks newest-to-oldest naturally.) Show **one line** of C++ that does the equivalent walk by hand using an explicit `Chain<std::string>::iterator` loop. Then one sentence: why is this iterator *bidirectional* (and what becomes impossible the moment you ask for random-access on it)?
 
 ```cpp
-// your one-line walk
+for (struct youSaidItHadToBeOneLineANDUseIteratorsAndCPlusPlusIsVeryStupidAndArbitraryInWhatYouCanAndCannotPutInAForLoopHeader { Chain<string>::iterator it, int i} hax; hax.it = player.eventLog.begin(), hax.i = 0; hax.it != player.eventLog.end() && hax.i < 5; ++hax.it, ++hax.i) std::cout << hax.(*it) << ".\n";
 ```
 
-(one-sentence answer — bidirectional vs random-access)
+The iterator is bidirectional because it supports incrementing and decrementing. It is not random-access because it does not come with an [operator] to access randomly, and the iterator
+could only implement this inefficiently and encourage Grixian misuse.
 
 ---
 

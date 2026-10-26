@@ -222,8 +222,11 @@ private:
     //         total += countFrom(n->children[i]);
     //     return total;
     static std::size_t countFrom(const Node* n) {
-        (void)n;
-        return 0;   // TODO Monday
+       if (n) {
+          std::size_t total = 1;
+          for (std::size_t i = 0; i < (n->children).size(); ++i) total += countFrom(n->children[i]);
+          return total;
+       } else return 0;
     }
 
     // Height (in edges) of the subtree rooted at n. A null subtree and a
@@ -236,8 +239,11 @@ private:
     //         best = std::max(best, heightFrom(n->children[i]));
     //     return 1 + best;
     static std::size_t heightFrom(const Node* n) {
-        (void)n;
-        return 0;   // TODO Monday
+       if (n) {
+          std::size_t best = 0;
+          for (std::size_t i = 0; i < n->children.size(); ++i) best = std::max(best, heightFrom(n->children[i]));
+          return 1 + best;
+       } else return 0;
     }
 
     // Append this node's data, THEN each child's subtree in order. The
@@ -249,8 +255,10 @@ private:
     //     for (std::size_t i = 0; i < n->children.size(); ++i)
     //         preOrderInto(n->children[i], out);
     static void preOrderInto(const Node* n, std::vector<T>& out) {
-        (void)n; (void)out;
-        // TODO Wednesday
+       if (n) {
+          out.push_back(n->data);
+          for (std::size_t i = 0; i < n->children.size(); ++i) preOrderInto(n->children[i], out);
+       } else return;
     }
 
     // Recursive search: return the node whose data == value, or nullptr.
@@ -264,8 +272,11 @@ private:
     //         if (const Node* hit = findFrom(n->children[i], value)) return hit;
     //     return nullptr;
     static const Node* findFrom(const Node* n, const T& value) {
-        (void)n; (void)value;
-        return nullptr;   // TODO Friday
+       if (n) {
+          if (n->data == value) return n;
+          for (const auto& child : n->children) if (const Node* hit = findFrom(child, value)) return hit;
+          return nullptr; // Just as dividing by 0 is indeterminate, the address of 0 could _theoretically_ point to what you want...
+       } else return nullptr; // Nullptr in, nullptr out.
     }
 };
 

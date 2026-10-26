@@ -290,7 +290,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
    };
 
    class adsjknvfPleaseDontDeclareMultipleOfTheseThisVeryLongNameShouldPreventMeHopefully { // A single-instance undo handler...
-      Stack<UndoAction> history; // That is my Floor 6
+      Stack<UndoAction> history; // _That_ is my Floor 6...
       bool undoUsed = false;
    public:
       void push(const std::string& desc, const Hero& player, const int playerHP) {
@@ -423,7 +423,7 @@ BattleOutcome runWaveSurvival(Hero& player, int waves) { // Changed Hero& name b
       }
    }
    player.eventLog.push_front("Battle waves -- victorious");
-   return BattleOutcome::Victory; // FIXME
+   return BattleOutcome::Victory;
 }
 
 }  // namespace dungeon
