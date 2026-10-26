@@ -239,7 +239,7 @@ private:
     //         best = std::max(best, heightFrom(n->children[i]));
     //     return 1 + best;
     static std::size_t heightFrom(const Node* n) {
-       if (n) {
+       if (n && n->children.size()) {
           std::size_t best = 0;
           for (std::size_t i = 0; i < n->children.size(); ++i) best = std::max(best, heightFrom(n->children[i]));
           return 1 + best;

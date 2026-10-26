@@ -13,6 +13,7 @@
 Creatures of the Hold/Undead/Corporeal/Skeleton
 Creatures of the Hold/Undead/Corporeal/Necrothrall
 Creatures of the Hold/Undead/Corporeal/Lich
+Creatures of the Hold/Undead/Corporeal/Goblin
 Creatures of the Hold/Undead/Incorporeal/Wraith
 Creatures of the Hold/Undead/Incorporeal/Wisp
 Creatures of the Hold/Beasts/Mammals/Shadow Hound
