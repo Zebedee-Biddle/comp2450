@@ -52,177 +52,210 @@ namespace dungeon {
 template <typename T>
 class BST {
 public:
-    struct Node {
-        T     data;
-        Node* left  = nullptr;
-        Node* right = nullptr;
-        explicit Node(const T& v) : data(v) {}
-    };
+   struct Node {
+      T     data;
+      Node* left = nullptr;
+      Node* right = nullptr;
+      explicit Node(const T& v) : data(v) {}
+      //explicit Node(const T& v, const Node<T>* child) : data(v), left(child) {} // I had to delete these because they broke the compiler's linter...
+      //explicit Node(const T& v, const Node<T>* ch1, const Node<T>* ch2) : data(v), left(ch1), right(ch2) {}
+   };
 
-    // ----- lifetime --------------------------------------------------
-    // The destructor and copy ctor delegate to destroy() and clone() —
-    // the two recursive helpers that are your Wednesday work. Until you
-    // write them, a BST destroys nothing and copies to empty (safe, but
-    // leaks and doesn't really deep-copy — selftest phase 6 catches it).
-    BST() = default;
-    ~BST() { destroy(root_); }
+   // ----- lifetime --------------------------------------------------
+   // The destructor and copy ctor delegate to destroy() and clone() —
+   // the two recursive helpers that are your Wednesday work. Until you
+   // write them, a BST destroys nothing and copies to empty (safe, but
+   // leaks and doesn't really deep-copy — selftest phase 6 catches it).
+   BST() = default;
+   ~BST() { destroy(root_); }
 
-    BST(const BST& other) { root_ = clone(other.root_); }
-    BST& operator=(const BST& other) {
-        if (this != &other) {
-            BST tmp(other);
-            std::swap(root_, tmp.root_);   // free once you've written clone + destroy
-        }
-        return *this;
-    }
+   BST(const BST& other) { root_ = clone(other.root_); }
+   BST& operator=(const BST& other) {
+      if (this != &other) {
+         BST tmp(other);
+         std::swap(root_, tmp.root_);   // free once you've written clone + destroy
+      }
+      return *this;
+   }
 
-    // ----- access (PROVIDED) -----------------------------------------
-    const Node* root()  const { return root_; }
-    bool        empty() const { return root_ == nullptr; }
+   // ----- access (PROVIDED) -----------------------------------------
+   const Node* root()  const { return root_; }
+   bool        empty() const { return root_ == nullptr; }
 
-    // size() and height() are PROVIDED — you wrote these exact recursive
-    // shapes (countFrom / heightFrom) on Floor 8. Height is in EDGES: an
-    // empty tree and a single node are both 0.
-    std::size_t size()   const { return countFrom(root_); }
-    std::size_t height() const { return heightFrom(root_); }
+   // size() and height() are PROVIDED — you wrote these exact recursive
+   // shapes (countFrom / heightFrom) on Floor 8. Height is in EDGES: an
+   // empty tree and a single node are both 0.
+   std::size_t size()   const { return countFrom(root_); }
+   std::size_t height() const { return heightFrom(root_); }
 
-    // ----- public operations (PROVIDED delegators) -------------------
-    // Each forwards to one of the six private helpers you write below.
-    void insert(const T& value)            { root_ = insertInto(root_, value); }
-    bool contains(const T& value) const    { return findFrom(root_, value) != nullptr; }
-    const Node* find(const T& value) const { return findFrom(root_, value); }
-    std::vector<T> inOrder() const {
-        std::vector<T> out;
-        inOrderInto(root_, out);
-        return out;
-    }
-    bool remove(const T& value) {
-        bool removed = false;
-        root_ = removeFrom(root_, value, removed);
-        return removed;
-    }
+   // ----- public operations (PROVIDED delegators) -------------------
+   // Each forwards to one of the six private helpers you write below.
+   void insert(const T& value) { root_ = insertInto(root_, value); }
+   bool contains(const T& value) const { return findFrom(root_, value) != nullptr; }
+   const Node* find(const T& value) const { return findFrom(root_, value); }
+   std::vector<T> inOrder() const {
+      std::vector<T> out;
+      inOrderInto(root_, out);
+      return out;
+   }
+   bool remove(const T& value) {
+      bool removed = false;
+      root_ = removeFrom(root_, value, removed);
+      return removed;
+   }
 
 private:
-    Node* root_ = nullptr;
+   Node* root_ = nullptr;
 
-    // ===== size/height — PROVIDED (Floor 8 muscle memory) ============
-    static std::size_t countFrom(const Node* n) {
-        if (n == nullptr) return 0;
-        return 1 + countFrom(n->left) + countFrom(n->right);
-    }
-    static std::size_t heightFrom(const Node* n) {
-        if (n == nullptr || (n->left == nullptr && n->right == nullptr)) return 0;
-        return 1 + std::max(heightFrom(n->left), heightFrom(n->right));
-    }
+   // ===== size/height — PROVIDED (Floor 8 muscle memory) ============
+   static std::size_t countFrom(const Node* n) {
+      if (n == nullptr) return 0;
+      return 1 + countFrom(n->left) + countFrom(n->right);
+   }
+   static std::size_t heightFrom(const Node* n) {
+      if (n == nullptr || (n->left == nullptr && n->right == nullptr)) return 0;
+      return 1 + std::max(heightFrom(n->left), heightFrom(n->right));
+   }
 
-    // ===== recursive helpers — YOU WRITE =============================
+   // ===== recursive helpers — YOU WRITE =============================
 
-    // ----- Monday ----------------------------------------------------
+   // ----- Monday ----------------------------------------------------
 
-    // Insert `value` in its sorted place. A null `n` is the empty slot
-    // where the value belongs — make the node there. Otherwise go left if
-    // value is smaller, right if larger; equal means it's already in the
-    // tree (do nothing — no duplicates). Return the subtree root so the
-    // caller can re-link to it.
-    //
-    // TODO Floor 9 (Monday). Sketch:
-    //     if (n == nullptr) return new Node(value);
-    //     if (value < n->data)      n->left  = insertInto(n->left,  value);
-    //     else if (n->data < value) n->right = insertInto(n->right, value);
-    //     return n;
-    static Node* insertInto(Node* n, const T& value) {
-        (void)value;
-        return n;   // TODO Monday — stub leaves the tree unchanged
-    }
+   // Insert `value` in its sorted place. A null `n` is the empty slot
+   // where the value belongs — make the node there. Otherwise go left if
+   // value is smaller, right if larger; equal means it's already in the
+   // tree (do nothing — no duplicates). Return the subtree root so the
+   // caller can re-link to it.
+   //
+   // TODO Floor 9 (Monday). Sketch:
+   //     if (n == nullptr) return new Node(value);
+   //     if (value < n->data)      n->left  = insertInto(n->left,  value);
+   //     else if (n->data < value) n->right = insertInto(n->right, value);
+   //     return n;
+   static Node* insertInto(Node* n, const T& value) {
+      if (n) {
+         if (value < n->data) n->left = insertInto(n->left, value);
+         else if (n->data < value)n->right = insertInto(n->right, value);
+         else return n;
+      } else return new Node(value);
+   }
 
-    // Search for `value`. Unlike Floor 8's findFrom, you do NOT ask every
-    // child — you compare once and recurse into ONE side. That is the whole
-    // O(log n) win. Return the matching node, or nullptr if absent.
-    //
-    // TODO Floor 9 (Monday). Sketch:
-    //     if (n == nullptr)    return nullptr;
-    //     if (value < n->data) return findFrom(n->left,  value);
-    //     if (n->data < value) return findFrom(n->right, value);
-    //     return n;   // equal => found
-    static const Node* findFrom(const Node* n, const T& value) {
-        (void)n; (void)value;
-        return nullptr;   // TODO Monday
-    }
+   // Search for `value`. Unlike Floor 8's findFrom, you do NOT ask every
+   // child — you compare once and recurse into ONE side. That is the whole
+   // O(log n) win. Return the matching node, or nullptr if absent.
+   //
+   // TODO Floor 9 (Monday). Sketch:
+   //     if (n == nullptr)    return nullptr;
+   //     if (value < n->data) return findFrom(n->left,  value);
+   //     if (n->data < value) return findFrom(n->right, value);
+   //     return n;   // equal => found
+   static const Node* findFrom(const Node* n, const T& value) {
+      if (n) {
+         if (value < n->data) return findFrom(n->left, value);
+         else if (n->data < value) return findFrom(n->right, value);
+         else return n;
+      } else return nullptr;
+   }
 
-    // ----- Wednesday -------------------------------------------------
+   // ----- Wednesday -------------------------------------------------
 
-    // Append every value in sorted (ascending) order. The trick is the
-    // ORDER of the three lines: recurse left, push THIS node, recurse
-    // right. Because left holds everything smaller and right everything
-    // larger, that walk emerges sorted — the BST's "free sort."
-    //
-    // TODO Floor 9 (Wednesday). Sketch:
-    //     if (n == nullptr) return;
-    //     inOrderInto(n->left, out);
-    //     out.push_back(n->data);
-    //     inOrderInto(n->right, out);
-    static void inOrderInto(const Node* n, std::vector<T>& out) {
-        (void)n; (void)out;
-        // TODO Wednesday
-    }
+   // Append every value in sorted (ascending) order. The trick is the
+   // ORDER of the three lines: recurse left, push THIS node, recurse
+   // right. Because left holds everything smaller and right everything
+   // larger, that walk emerges sorted — the BST's "free sort."
+   //
+   // TODO Floor 9 (Wednesday). Sketch:
+   //     if (n == nullptr) return;
+   //     inOrderInto(n->left, out);
+   //     out.push_back(n->data);
+   //     inOrderInto(n->right, out);
+   static void inOrderInto(const Node* n, std::vector<T>& out) {
+      if (n) {
+         inOrderInto(n->left, out);
+         out.push_back(n->data);
+         inOrderInto(n->right, out);
+      } else return;
+   }
 
-    // Free the whole subtree. This is the Floor 8 Tree destructor with
-    // left/right instead of a child bag: free both children FIRST, then
-    // delete the node (delete the node first and you lose its subtrees).
-    //
-    // TODO Floor 9 (Wednesday). Sketch:
-    //     if (n == nullptr) return;
-    //     destroy(n->left);
-    //     destroy(n->right);
-    //     delete n;
-    static void destroy(Node* n) {
-        (void)n;
-        // TODO Wednesday — until written, the BST leaks its nodes
-    }
+   // Free the whole subtree. This is the Floor 8 Tree destructor with
+   // left/right instead of a child bag: free both children FIRST, then
+   // delete the node (delete the node first and you lose its subtrees).
+   //
+   // TODO Floor 9 (Wednesday). Sketch:
+   //     if (n == nullptr) return;
+   //     destroy(n->left);
+   //     destroy(n->right);
+   //     delete n;
+   static void destroy(Node* n) {
+      if (n) {
+         destroy(n->left);
+         destroy(n->right);
+         delete n;
+      } else return;
+   }
 
-    // Deep-copy the whole subtree. Mirrors destroy(): make this node, then
-    // copy each side beneath it. Returns the new subtree (or nullptr).
-    //
-    // TODO Floor 9 (Wednesday). Sketch:
-    //     if (n == nullptr) return nullptr;
-    //     Node* copy = new Node(n->data);
-    //     copy->left  = clone(n->left);
-    //     copy->right = clone(n->right);
-    //     return copy;
-    static Node* clone(const Node* n) {
-        (void)n;
-        return nullptr;   // TODO Wednesday — stub copies to an empty tree
-    }
+   // Deep-copy the whole subtree. Mirrors destroy(): make this node, then
+   // copy each side beneath it. Returns the new subtree (or nullptr).
+   //
+   // TODO Floor 9 (Wednesday). Sketch:
+   //     if (n == nullptr) return nullptr;
+   //     Node* copy = new Node(n->data);
+   //     copy->left  = clone(n->left);
+   //     copy->right = clone(n->right);
+   //     return copy;
+   static Node* clone(const Node* n) {
+      if (n) {
+         Node* cpy = new Node(n->data);
+         cpy->left = clone(n->left);
+         cpy->right = clone(n->right);
+         return cpy;
+      } else return nullptr;
+   }
 
-    // ----- Friday ----------------------------------------------------
+   // ----- Friday ----------------------------------------------------
 
-    // Remove `value`. Descend to find it (same one-way walk as findFrom),
-    // set `removed` to true when you do, and handle THREE cases:
-    //   * no left child  -> return the right child (this also covers a leaf,
-    //                       whose right child is nullptr)
-    //   * no right child -> return the left child
-    //   * two children   -> copy the in-order SUCCESSOR (the leftmost node
-    //                       of the right subtree) into this node, then
-    //                       remove that successor from the right subtree.
-    // Return the new subtree root so the parent re-links to it.
-    //
-    // TODO Floor 9 (Friday). Sketch:
-    //     if (n == nullptr) return nullptr;
-    //     if (value < n->data) { n->left  = removeFrom(n->left,  value, removed); return n; }
-    //     if (n->data < value) { n->right = removeFrom(n->right, value, removed); return n; }
-    //     removed = true;
-    //     if (n->left  == nullptr) { Node* r = n->right; delete n; return r; }
-    //     if (n->right == nullptr) { Node* l = n->left;  delete n; return l; }
-    //     Node* succ = n->right;
-    //     while (succ->left != nullptr) succ = succ->left;
-    //     n->data = succ->data;
-    //     bool discard = false;
-    //     n->right = removeFrom(n->right, succ->data, discard);
-    //     return n;
-    static Node* removeFrom(Node* n, const T& value, bool& removed) {
-        (void)value; (void)removed;
-        return n;   // TODO Friday — stub leaves the tree unchanged
-    }
-};
+   // Remove `value`. Descend to find it (same one-way walk as findFrom),
+   // set `removed` to true when you do, and handle THREE cases:
+   //   * no left child  -> return the right child (this also covers a leaf,
+   //                       whose right child is nullptr)
+   //   * no right child -> return the left child
+   //   * two children   -> copy the in-order SUCCESSOR (the leftmost node
+   //                       of the right subtree) into this node, then
+   //                       remove that successor from the right subtree.
+   // Return the new subtree root so the parent re-links to it.
+   //
+   // TODO Floor 9 (Friday). Sketch:
+   //     if (n == nullptr) return nullptr;
+   //     if (value < n->data) { n->left  = removeFrom(n->left,  value, removed); return n; }
+   //     if (n->data < value) { n->right = removeFrom(n->right, value, removed); return n; }
+   //     removed = true;
+   //     if (n->left  == nullptr) { Node* r = n->right; delete n; return r; }
+   //     if (n->right == nullptr) { Node* l = n->left;  delete n; return l; }
+   //     Node* succ = n->right;
+   //     while (succ->left != nullptr) succ = succ->left;
+   //     n->data = succ->data;
+   //     bool discard = false;
+   //     n->right = removeFrom(n->right, succ->data, discard);
+   //     return n;
+   static Node* removeFrom(Node* n, const T& value, bool& removed) {
+      if (n) {
+         if (value < n->data) {
+            n->left = removeFrom(n->left, value, removed); return n;
+         } else if (n->data < value) {
+            n->right = removeFrom(n->right, value, removed); return n;
+         } else removed = true;
 
+         if (n->left == nullptr) { Node* r = r->right; delete r; return r; }
+         else if (n->left == nullptr) { Node* l = l->left; delete l; return l; }
+
+         Node* next = n->right; while (next->left) next = next->left;
+         n->data = next->data;
+         bool discard = false;
+
+         n->right = removeFrom(n->right, next->data, discard);
+         return n;
+      } else return nullptr;
+   }
+
+   };
 }  // namespace dungeon
