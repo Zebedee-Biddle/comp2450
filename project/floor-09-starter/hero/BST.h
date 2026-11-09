@@ -136,7 +136,7 @@ private:
       if (n) {
          if (value < n->data) n->left = insertInto(n->left, value);
          else if (n->data < value)n->right = insertInto(n->right, value);
-         else return n;
+         return n; // Hmm...
       } else return new Node(value);
    }
 
@@ -245,8 +245,8 @@ private:
             n->right = removeFrom(n->right, value, removed); return n;
          } else removed = true;
 
-         if (n->left == nullptr) { Node* r = r->right; delete r; return r; }
-         else if (n->left == nullptr) { Node* l = l->left; delete l; return l; }
+         if (n->left == nullptr) { Node* r = n->right; delete n; return r; }
+         else if (n->right == nullptr) { Node* l = n->left; delete n; return l; }
 
          Node* next = n->right; while (next->left) next = next->left;
          n->data = next->data;
