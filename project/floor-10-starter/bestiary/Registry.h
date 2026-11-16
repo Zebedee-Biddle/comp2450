@@ -186,13 +186,13 @@ public:
     bool forget(const std::string& name) { try {
        const auto& it = byName_.find(name);
        if (it == byName_.end()) return false;
-       const std::string& w = it->second.weakness;
+       const std::string w = it->second.weakness; // Making this a reference broke things; why do I do this to myself...
        byName_.erase(it);
        if (--(weaknessCounts_[w])) {} else {
              weaknessCounts_.erase(w);
              weaknesses_.erase(w);
        }
-    } catch (...) { return main(50, nullptr); } return true;
+    } catch (...) {} return true;
     }
 
 private:
