@@ -84,7 +84,7 @@ public:
 
     // The load-factor trigger (ZyBook §12.4). When items / buckets exceeds this,
     // rehashIfNeeded() doubles the bucket count so chains stay short.
-    static constexpr double kMaxLoadFactor = 0.75;
+    static constexpr float kMaxLoadFactor = 0.75;
 
     // ----- construction (PROVIDED, complete) -------------------------
     // Size the bucket array and zero the count. We std::max with 1 so the table
@@ -111,8 +111,8 @@ public:
     // The §12.4 load factor: items divided by buckets. Provided so the page can
     // SHOW it without making the arithmetic the student's job. The TRIGGER
     // threshold (kMaxLoadFactor) is applied inside rehashIfNeeded (#6).
-    double loadFactor() const {
-        return static_cast<double>(count_) / static_cast<double>(buckets_.size());
+    float loadFactor() const {
+       return static_cast<float>(count_) / static_cast<float>(buckets_.size()); // I find it dubious that anyone will be making comparisons between loadFactor and pi.
     }
 
     // Read-only view of the bucket array, so the `buckets` REPL command and the
@@ -129,22 +129,16 @@ public:
     // table is full, swap it in. We build a fresh vector and swap rather than
     // mutating buckets_ while iterating it (mutating a container you are walking
     // is the aliasing bug §8 warns about).
-    void rehash(std::size_t newBucketCount) {
-        if (newBucketCount < 1) newBucketCount = 1;
+    std::size_t rehash(std::size_t newBucketCount) {
+        if (newBucketCount < 1) count_ = newBucketCount = 1; // Added this...
         std::vector<Chain<Monster>> grown(newBucketCount);
         for (const Chain<Monster>& bucket : buckets_) {
             for (const Monster& m : bucket) {
-                // ===== YOU WRITE (Friday, with rehashIfNeeded #6) =====
-                // Compute m's home in the NEW, bigger array and push it there.
-                // It is one line. Sketch:
-                //     grown[hashKey(m.name) % newBucketCount].push_back(m);
-                // (count_ does NOT change here — rehash moves items, it does not
-                //  add or drop any. The TODO stub below files nothing, so after a
-                //  rehash the table would be EMPTY and self-test phase 6 FAILs.)
-                (void)m;   // TODO Friday — re-file m into grown[...]
+               grown[hashKey(m.name) % newBucketCount].push_back(m);
             }
         }
         buckets_.swap(grown);
+        return count_ <<= 1; // ... and foremost this in an attempt to bugfix. It probably fixed _something_, but the error codes are too opaque to determine _what_...
     }
 
     // ===== YOU WRITE — the six method bodies =========================
@@ -168,9 +162,10 @@ public:
     //
     // TODO Floor 11 (Monday). Stub returns 0 -> every name hashes to the same
     // code, so phase 1 (deterministic-AND-distinct) FAILs.
-    std::size_t hashKey(const std::string& name) const {
-        (void)name;
-        return 0;   // TODO Monday — multiplicative string hash (h = h*31 + c)
+   uint64_t hashKey(const std::string& name) const {
+       uint64_t h = 0;
+       for (const auto& c : name) h += static_cast<unsigned char>(c) + (h << 5);
+       return h;
     }
 
     // Reduce the hash code to a valid bucket index — the MODULO HASH step
@@ -182,9 +177,8 @@ public:
     // TODO Floor 11 (Monday). Stub returns 0 (a VALID index, so no crash), but
     // it sends every name to bucket 0, so distinctness/correctness phases FAIL.
     std::size_t bucketIndex(const std::string& name) const {
-        (void)name;
-        return 0;   // TODO Monday — return hashKey(name) % buckets_.size();
-    }
+       return hashKey(name) % buckets_.size(); // So, a funny story about this: I banked on buckets_ always being a power of two and so used bitwise AND instead of modulo. This caused the
+    }                                  // floor to crash immediately after inputting the name, after the welcome message was shown but before the list of possibilities was even displayed.
 
     // Add m to its home bucket. Compute bucketIndex(m.name); if no monster with
     // that name is ALREADY in that bucket's chain, push_back it and ++count_
@@ -207,8 +201,13 @@ public:
     //     rehashIfNeeded();                              // Fri: grow if crowded
     //     return true;
     bool insert(const Monster& m) {
-        (void)m;
-        return false;   // TODO Monday — push m into bucketIndex(m.name)'s chain
+       if (find(m.name)) return false; else { // This guard was designed to fix the error. It did not do that.
+          std::size_t i = bucketIndex(m.name);
+          buckets_[i].push_back(m);
+          rehashIfNeeded();
+          ++count_;
+          return true;
+       }
     }
 
     // ----- Wednesday: one short list, not the whole table ------------
@@ -228,8 +227,9 @@ public:
     //         if (m.name == name) return &m;
     //     return nullptr;
     const Monster* find(const std::string& name) const {
-        (void)name;
-        return nullptr;   // TODO Wednesday — scan only bucketIndex(name)'s chain
+       const std::size_t i = bucketIndex(name);
+       for (const Monster& m : buckets_[i]) if (m.name == name) return &m;
+       return nullptr;
     }
 
     // Remove the named monster: compute its bucket, remove the matching item
@@ -246,8 +246,10 @@ public:
     //     if (removed) --count_;
     //     return removed;
     bool erase(const std::string& name) {
-        (void)name;
-        return false;   // TODO Wednesday — eraseFirst from bucketIndex(name)'s chain
+       std::size_t i = bucketIndex(name);
+       bool removed = buckets_[i].eraseFirst([&](const Monster& m) {return m.name == name; });
+       if (removed) --count_;
+       return removed;
     }
 
     // ----- Friday: keep the whisper a whisper ------------------------
@@ -264,7 +266,7 @@ public:
     //         rehash(buckets_.size() * 2);
     //     return buckets_.size();
     std::size_t rehashIfNeeded() {
-        return buckets_.size();   // TODO Friday — grow when loadFactor() > kMaxLoadFactor
+       return loadFactor() > kMaxLoadFactor ? rehash(count_) : count_; // I made rehash a non-void function because it is literally just called by this...
     }
 
 private:
